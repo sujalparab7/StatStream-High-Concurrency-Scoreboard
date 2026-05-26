@@ -3,9 +3,12 @@ package controllers
 import (
 	"database/sql"
 	"fmt"
+	"strings"
 	"time"
+
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type UserController struct {
@@ -51,7 +54,7 @@ func AuthMiddleware() gin.HandlerFunc {
 			c.Abort()
 			return 
 		}
-		if claims,ok:=token.Claims.(jwt.ClaimStrings);ok{
+		if claims,ok:=token.Claims.(jwt.MapClaims);ok{
 			if userID,ok:=claims["user_id"].(string);ok{
 				c.Set("user_id",userID)
 				c.Next()
@@ -72,6 +75,28 @@ func GenerateToken(userID string) (string,error){
 	token:=jwt.NewWithClaims(jwt.SigningMethodHS256,claims)
 
 	return token.SignedString(jwtKey)
+}
+
+func (u *UserController) GenerateTestToken(c *gin.Context){
+	tokenString,err:=GenerateToken("user_999")
+	if err!=nil{
+		c.JSON(400,gin.H{"error":"Test token generation failed","error is":err.Error()})
+		return 
+	}
+	c.JSON(201,gin.H{
+		"message":"Copy the string below to use in your Authenticationa account",
+		"token":tokenString,
+	})
+}
+
+func HashPassword(password string) (string,error){
+	bytes,err:=bcrypt.GenerateFromPassword([]byte(password),14)
+	return string(bytes),err
+}
+
+func CheckPasswordHash(password, hash string) bool{
+	err:=bcrypt.CompareHashAndPassword([]byte (hash),[]byte (password))
+	return err==nil
 }
 
 func (u *UserController) Submitscores(c *gin.Context) {

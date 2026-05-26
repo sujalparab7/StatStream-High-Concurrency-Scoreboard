@@ -20,5 +20,7 @@ func main() {
 
 	r.GET("/leaderboard", userCtrl.GetLeaderboard)
 
+	r.GET("/test-token",userCtrl.GenerateTestToken)
+
 	r.Run(":8081")
 }
