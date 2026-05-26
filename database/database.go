@@ -22,6 +22,14 @@ func ConnectDB() *sql.DB{
 	fmt.Println("Database connected successfully!")
 
 	sqlQuery:=`
+	
+	CREATE TABLE IF NOT EXISTS SCORES(
+	id SERIAL PRIMARY KEY,
+	user_id TEXT NOT NULL,
+	score INT , 
+	language TEXT NOT NULL
+	);
+
 	CREATE TABLE IF NOT EXISTS SCORES(
 	id SERIAL PRIMARY KEY,
 	user_id TEXT NOT NULL,
@@ -31,7 +39,7 @@ func ConnectDB() *sql.DB{
 
  	_,err=db.Exec(sqlQuery)
 	if err!=nil{
-		log.Fatalf("Failed to create user table")
+		log.Fatalf("Failed to create tables:%v",err)
 	}
 
 	return db

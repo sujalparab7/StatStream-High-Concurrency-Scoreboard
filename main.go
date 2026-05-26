@@ -18,6 +18,8 @@ func main() {
 
 	r.POST("/scores", controllers.AuthMiddleware(), userCtrl.Submitscores)
 
+	r.POST("/register", userCtrl.RegisterUser)
+
 	r.GET("/leaderboard", userCtrl.GetLeaderboard)
 
 	r.GET("/test-token",userCtrl.GenerateTestToken)

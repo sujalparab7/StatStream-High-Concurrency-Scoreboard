@@ -11,11 +11,16 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+var jwtKey = []byte("super_secret_encryption_key_123")
+
 type UserController struct {
 	DB *sql.DB
 }
 
-var jwtKey = []byte("super_secret_encryption_key_123")
+type AuthInput struct {
+	Username string `json:"username"`
+	Password string `json:"password"`
+}
 
 type ScoreInput struct {
 	Score    int    `json:"score"`
@@ -97,6 +102,33 @@ func HashPassword(password string) (string,error){
 func CheckPasswordHash(password, hash string) bool{
 	err:=bcrypt.CompareHashAndPassword([]byte (hash),[]byte (password))
 	return err==nil
+}
+
+func (u *UserController) RegisterUser(c *gin.Context){
+	var input AuthInput
+	if err:=c.ShouldBindJSON(&input);err!=nil{
+		c.JSON(400,gin.H{"error":"Invalid JSON body"})
+		return 
+	}
+	hashedPassword,err:=HashPassword(input.Password)
+	if err!=nil{
+		c.JSON(500,gin.H{"error":"Password was not hashed correctly"})
+		return
+	}
+	userID:=fmt.Sprintf("user_id %d",time.Now().Unix())
+
+	insertSQL:=`INSERT into users (id,username,password_hash) VALUES($1,$2,$3)`
+	_,err=u.DB.Exec(insertSQL,userID,input.Username,hashedPassword)
+
+	if err!=nil{
+		c.JSON(409,gin.H{"error":"Username already exists"})
+		return 
+	}
+
+	c.JSON(201,gin.H{
+		"message":"Competitor registered successfully",
+		"userID":userID,
+	})
 }
 
 func (u *UserController) Submitscores(c *gin.Context) {
