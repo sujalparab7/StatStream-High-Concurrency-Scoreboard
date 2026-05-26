@@ -20,6 +20,8 @@ func main() {
 
 	r.POST("/register", userCtrl.RegisterUser)
 
+	r.POST("/login",userCtrl.LoginUser)
+
 	r.GET("/leaderboard", userCtrl.GetLeaderboard)
 
 	r.GET("/test-token",userCtrl.GenerateTestToken)

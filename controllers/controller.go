@@ -117,17 +117,59 @@ func (u *UserController) RegisterUser(c *gin.Context){
 	}
 	userID:=fmt.Sprintf("user_id %d",time.Now().Unix())
 
-	insertSQL:=`INSERT into users (id,username,password_hash) VALUES($1,$2,$3)`
+	insertSQL:=`INSERT into competitors (id,username,password_hash) VALUES($1,$2,$3)`
 	_,err=u.DB.Exec(insertSQL,userID,input.Username,hashedPassword)
 
 	if err!=nil{
-		c.JSON(409,gin.H{"error":"Username already exists"})
+		c.JSON(409,gin.H{
+			"error":"Database rejected the insert",
+			"details":err.Error(),
+		})
 		return 
 	}
 
 	c.JSON(201,gin.H{
 		"message":"Competitor registered successfully",
 		"userID":userID,
+	})
+}
+
+func (u *UserController) LoginUser(c *gin.Context){
+	var input AuthInput
+	if err:=c.ShouldBindJSON(&input);err!=nil{
+		c.JSON(400,gin.H{"error":"Invalid JSON Body"})
+		return
+	}
+	
+	var userID,passwordHash string
+	query:=`SELECT id,password_hash from competitors WHERE username=$1`
+	err:=u.DB.QueryRow(query,input.Username).Scan(&userID,&passwordHash)
+
+	if err!=nil{
+		c.JSON(400,gin.H{
+			"error":"Invalid username or password",
+			"actual error is":err.Error(),
+		})
+		return
+	}
+
+	if !CheckPasswordHash(input.Password,passwordHash){
+		c.JSON(401,gin.H{
+			"error":"Invalid username or password",
+			"actual error is":err.Error(),
+		})
+		return
+	}
+
+	tokenString,err:=GenerateToken(userID)
+	if err!=nil{
+			c.JSON(500,gin.H{"error":"Invalid or expired token"})
+			return
+		}
+
+	c.JSON(201,gin.H{
+		"message":"Login Successfull",
+		"token":tokenString,
 	})
 }
 

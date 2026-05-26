@@ -21,20 +21,18 @@ func ConnectDB() *sql.DB{
 
 	fmt.Println("Database connected successfully!")
 
-	sqlQuery:=`
-	
-	CREATE TABLE IF NOT EXISTS SCORES(
-	id SERIAL PRIMARY KEY,
-	user_id TEXT NOT NULL,
-	score INT , 
-	language TEXT NOT NULL
+	sqlQuery := `
+	CREATE TABLE IF NOT EXISTS competitors (
+		id TEXT PRIMARY KEY,
+		username TEXT UNIQUE NOT NULL,
+		password_hash TEXT NOT NULL
 	);
 
-	CREATE TABLE IF NOT EXISTS SCORES(
-	id SERIAL PRIMARY KEY,
-	user_id TEXT NOT NULL,
-	score INT , 
-	language TEXT NOT NULL
+	CREATE TABLE IF NOT EXISTS scores (
+		id SERIAL PRIMARY KEY,
+		user_id TEXT NOT NULL,
+		score INT, 
+		language TEXT NOT NULL
 	);`
 
  	_,err=db.Exec(sqlQuery)
