@@ -2,8 +2,10 @@ package controllers
 
 import (
 	"database/sql"
-
+	"fmt"
+	"time"
 	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt/v5"
 )
 
 type UserController struct {
@@ -18,16 +20,58 @@ type ScoreInput struct {
 }
 
 type LeaderboardEntry struct{
-	UserId int `json:"user_id"`
+	UserId string `json:"user_id"`
 	Score int `json:"score"`
 	Language string `json:"language"`
 }
 
 func AuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		c.Set("user_id",1)
-		c.Next()
+		authHeader:=c.GetHeader("Authorization")
+		if authHeader==""{
+			c.JSON(401,gin.H{"error":"Authorization header missing"})
+			c.Abort()
+			return	
+		}
+		parts:=strings.Split(authHeader," ")
+		if len(parts)!=2 || parts[0]!="Bearer"{
+			c.JSON(401,gin.H{"error":"Invalid token format.Use Bearer <token>"})
+			c.Abort()
+			return 
+		}
+		tokenString:=parts[1]
+		token,err:=jwt.Parse(tokenString,func(token *jwt.Token)(interface{},error){
+			if _,ok:=token.Method.(*jwt.SigningMethodHMAC);!ok{
+				return nil,fmt.Errorf("unexpected signing method")
+			}
+			return jwtKey,nil
+		})
+		if err!=nil ||!token.Valid{
+			c.JSON(400,gin.H{"error":"Invalid or expired token"})
+			c.Abort()
+			return 
+		}
+		if claims,ok:=token.Claims.(jwt.ClaimStrings);ok{
+			if userID,ok:=claims["user_id"].(string);ok{
+				c.Set("user_id",userID)
+				c.Next()
+				return
+			}
+		}
+		c.JSON(401,gin.H{"error":"Token Invalid"})
+		c.Abort()
 	}
+}
+
+func GenerateToken(userID string) (string,error){
+	claims:=jwt.MapClaims{
+		"user_id":userID,
+		"exp":time.Now().Add(time.Hour * 24).Unix(),
+	}
+
+	token:=jwt.NewWithClaims(jwt.SigningMethodHS256,claims)
+
+	return token.SignedString(jwtKey)
 }
 
 func (u *UserController) Submitscores(c *gin.Context) {
