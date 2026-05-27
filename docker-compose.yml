@@ -1,0 +1,52 @@
+services:
+  # 1. PostgreSQL Database Service
+  db:
+    image: postgres:15-alpine
+    container_name: arena-postgres-db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: your_secure_password
+      POSTGRES_DB: competitive_arena
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  # 2. Go API Backend Service
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: arena-go-api
+    ports:
+      - "8081:8081"
+    environment:
+      # These environment variables match what your Go database logic expects
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASSWORD: your_secure_password
+      DB_NAME: competitive_arena
+      # This explicitly feeds the secret key to os.Getenv("JWT_SECRET")
+      JWT_SECRET: super_secret_arena_signing_key_2026 
+      GIN_MODE: release
+    depends_on:
+      - db
+    restart: unless-stopped
+
+  # 3. React Frontend Service (Served via Nginx)
+  frontend:
+    build:
+      context: ./arena-frontend
+      dockerfile: Dockerfile
+    container_name: arena-react-ui
+    ports:
+      - "3000:80"
+    depends_on:
+      - api
+    restart: unless-stopped
+
+# Persistent volume to ensure database rows don't vanish when containers halt
+volumes:
+  pg_data:

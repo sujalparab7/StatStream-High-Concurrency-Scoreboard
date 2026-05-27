@@ -5,13 +5,11 @@ import (
 	"fmt"
 	"strings"
 	"time"
-
+	"os"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
 )
-
-var jwtKey = []byte("super_secret_encryption_key_123")
 
 type UserController struct {
 	DB *sql.DB
@@ -29,6 +27,7 @@ type ScoreInput struct {
 
 type LeaderboardEntry struct{
 	UserId string `json:"user_id"`
+	Username string `json:"username"`
 	Score int `json:"score"`
 	Language string `json:"language"`
 }
@@ -52,7 +51,7 @@ func AuthMiddleware() gin.HandlerFunc {
 			if _,ok:=token.Method.(*jwt.SigningMethodHMAC);!ok{
 				return nil,fmt.Errorf("unexpected signing method")
 			}
-			return jwtKey,nil
+			return []byte(os.Getenv("JWT_SECRET")),nil
 		})
 		if err!=nil ||!token.Valid{
 			c.JSON(400,gin.H{"error":"Invalid or expired token"})
@@ -79,7 +78,7 @@ func GenerateToken(userID string) (string,error){
 
 	token:=jwt.NewWithClaims(jwt.SigningMethodHS256,claims)
 
-	return token.SignedString(jwtKey)
+	return token.SignedString([]byte(os.Getenv("JWT_SECRET")))
 }
 
 func (u *UserController) GenerateTestToken(c *gin.Context){
@@ -197,7 +196,12 @@ func (u *UserController) Submitscores(c *gin.Context) {
 }
 
 func (u *UserController) GetLeaderboard(c *gin.Context) {
-	query:=`SELECT user_id,score,language FROM scores ORDER BY score DESC LIMIT 5`
+	query:=
+	`SELECT s.user_id, c.username, s.score, s.language 
+        FROM scores s
+        JOIN competitors c ON s.user_id = c.id
+        ORDER BY s.score DESC 
+        LIMIT 5`
 	rows,err:=u.DB.Query(query)
 	if err!=nil{
 		c.JSON(400,gin.H{"error":"Failed to fetch leaderboard","details":err.Error()})
@@ -212,7 +216,7 @@ func (u *UserController) GetLeaderboard(c *gin.Context) {
 		
 		var entry LeaderboardEntry
 
-		err:=rows.Scan(&entry.UserId,&entry.Score,&entry.Language)
+		err:=rows.Scan(&entry.UserId,&entry.Username,&entry.Score,&entry.Language)
 
 		if err!=nil{
 			c.JSON(400,gin.H{"error":"Error reading a row","details":err.Error()})
