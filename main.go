@@ -12,7 +12,7 @@ import (
 
 func main() {
 	if err:=godotenv.Load();err!=nil{
-		log.Println("Warning: No env file found")
+		log.Fatal("Warning: No env file found")
 	}
 
 	db := database.ConnectDB()
@@ -43,10 +43,8 @@ func main() {
 
 func CORSMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		// Allow your React frontend port to access this API
 		c.Writer.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
 		c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
-		// Allow specific headers (including Authorization for your JWT tokens later!)
 		c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, accept, origin, Cache-Control, X-Requested-With")
 		c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS, GET, PUT, DELETE")
 

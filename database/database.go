@@ -9,14 +9,13 @@ import(
 )
 
 func ConnectDB() *sql.DB{
-	dbHost := os.Getenv("DB_HOST")     
-	dbPort := os.Getenv("DB_PORT")     
+	dbHost := os.Getenv("DB_HOST")
+	dbPort := os.Getenv("DB_PORT")
 	dbUser := os.Getenv("DB_USER")     
-	dbPass := os.Getenv("DB_PASSWORD") 
+	dbPass := os.Getenv("DB_PASSWORD")
 	dbName := os.Getenv("DB_NAME")
 	connStr := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", 
     dbHost, dbPort, dbUser, dbPass, dbName)
-
 	db,err:=sql.Open("postgres",connStr)
 	if err!=nil{
 		log.Fatalf("Database could not be opened due to some issues")
@@ -24,7 +23,7 @@ func ConnectDB() *sql.DB{
 
 	err=db.Ping()
 	if err!=nil{
-		log.Fatalf("Database could not be pinged")
+		log.Fatalf("Database could not be pinged %v",err)
 	}
 
 	fmt.Println("Database connected successfully!")
