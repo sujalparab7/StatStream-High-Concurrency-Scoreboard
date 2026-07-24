@@ -138,7 +138,7 @@ export default function Leaderboard() {
                 {scores.map((row, index) => (
                   <tr key={index} className="hover:bg-gray-850/30 transition">
                     <td className="py-4 px-6 text-center font-bold text-cyan-400">{index + 1}</td>
-                    <td className="py-4 px-6 font-medium textwhite">{row.username}</td>
+                    <td className="py-4 px-6 font-medium text-white">{row.username}</td>
                     <td className="py-4 px-6">
                       <span className="bg-cyan-950/40 text-cyan-400 text-xs px-2.5 py-1 rounded-md font-semibold uppercase border border-cyan-900/30">
                         {row.language}

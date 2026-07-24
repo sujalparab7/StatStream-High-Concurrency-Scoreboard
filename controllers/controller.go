@@ -155,16 +155,15 @@ func (u *UserController) LoginUser(c *gin.Context){
 	if !CheckPasswordHash(input.Password,passwordHash){
 		c.JSON(401,gin.H{
 			"error":"Invalid username or password",
-			"actual error is":err.Error(),
 		})
 		return
 	}
 
 	tokenString,err:=GenerateToken(userID)
 	if err!=nil{
-			c.JSON(500,gin.H{"error":"Invalid or expired token"})
-			return
-		}
+    	c.JSON(500,gin.H{"error":"Token generation failed", "details": err.Error()})
+    	return
+	}
 
 	c.JSON(201,gin.H{
 		"message":"Login Successfull",
