@@ -14,8 +14,9 @@ func ConnectDB() *sql.DB{
 	dbUser := os.Getenv("DB_USER")     
 	dbPass := os.Getenv("DB_PASSWORD")
 	dbName := os.Getenv("DB_NAME")
-	connStr := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", 
-    dbHost, dbPort, dbUser, dbPass, dbName)
+	dbSSLMode:=os.Getenv("DB_SSLMODE")
+	connStr := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=%s", 
+    dbHost, dbPort, dbUser, dbPass, dbName,dbSSLMode)
 	db,err:=sql.Open("postgres",connStr)
 	if err!=nil{
 		log.Fatalf("Database could not be opened due to some issues")
