@@ -1,14 +1,14 @@
 import axios from 'axios';
 
-// Create a dedicated instance pointing to your Go backend
+// Dynamically use Vercel's environment variable or fallback to localhost
 const api = axios.create({
-  baseURL: 'http://localhost:8081',
+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8081',
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
-// We will use this later to attach your JWT token to requests
+// Attach your JWT token to requests automatically
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('token');
   if (token) {
@@ -17,11 +17,9 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-// The 3 functions your UI will use to talk to Go
 export const registerUser = (userData) => api.post('/register', userData);
 export const loginUser = (userData) => api.post('/login', userData);
 export const getLeaderboard = () => api.get('/leaderboard');
+export const submitScore = (scoreData) => api.post('/scores', scoreData);
 
 export default api;
-
-export const submitScore = (scoreData) => api.post('/scores', scoreData);
